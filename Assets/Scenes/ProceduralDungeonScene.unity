@@ -422,14 +422,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startingRoomSize: {x: 100, y: 100}
-  minRoomSize: {x: 15, y: 15}
+  minRoomSize: {x: 10, y: 10}
   randomSplitOffset: {x: -3, y: 3}
-  room:
-    x: 0
-    y: 0
-    width: 0
-    height: 0
-  roomID: 0
+  generationType: Spacebar press
   rooms: []
   completedRooms: []
 --- !u!1 &832575517
