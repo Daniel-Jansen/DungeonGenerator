@@ -1,43 +1,39 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using NaughtyAttributes;
 
 public class DungeonGenerator : MonoBehaviour
 {
+    [Header("Dungeon Settings")]
     public Vector2Int startingRoomSize = new Vector2Int(100, 100);
-    public Vector2Int minRoomSize = new Vector2Int(15, 15);
+    public Vector2Int minRoomSize = new Vector2Int(10, 10);
     public Vector2Int randomSplitOffset = new Vector2Int(-3, 3);
-    public RectInt room;
 
+    [Header("Dungeon Generation")]
+    [OnValueChanged("GenerationTypeChanged")]
+    [Dropdown("GetGenerationTypes")]
+    public string generationType;
+
+    private List<string> GetGenerationTypes()
+    {
+        return new List<string>
+        {
+            "Spacebar press",
+            "Small delay",
+            "Instant",
+            "Test",
+        };
+    }
+
+
+    [Header("Room Lists")]
     public List<RectInt> rooms = new List<RectInt>();
     public List<RectInt> completedRooms = new List<RectInt>();
 
-    [Button("Split —")]
-    public void ButtonSplitHorizontally()
-    {
-        if (rooms.Count > 0)
-        {
-            SplitHorizontally(rooms[0]);
-        }
-        else
-        {
-            Debug.LogWarning("No rooms to split. Create a main room.");
-        }
-    }
-
-    [Button("Split |")]
-    public void ButtonSplitVertically()
-    {
-        if (rooms.Count > 0)
-        {
-            SplitVertically(rooms[0]);
-        }
-        else
-        {
-            Debug.LogWarning("No rooms to split. Create a main room.");
-        }
-    }
-
+    private RectInt room;
+    private Coroutine splitDelayCoroutine;
+    private Coroutine splitInstantCoroutine;
     private WaitForSeconds oneSecondPause;
     private WaitForSeconds halfASecondPause;
 
@@ -48,6 +44,15 @@ public class DungeonGenerator : MonoBehaviour
         halfASecondPause = new WaitForSeconds(0.5f);
 
         CreateMainRoom();
+
+        if (generationType == "Small delay")
+        {
+            StartCoroutine(SplitRoomsWithDelay());
+        }
+        else if (generationType == "Instant")
+        {
+            StartCoroutine(SplitRoomsInstantly());
+        }
     }
 
     void Update()
@@ -62,7 +67,7 @@ public class DungeonGenerator : MonoBehaviour
             AlgorithmsUtils.DebugRectInt(r, Color.green);
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && generationType == "Spacebar press")
         {
             SplitRooms();
         }
@@ -91,7 +96,7 @@ public class DungeonGenerator : MonoBehaviour
     public void SplitHorizontally(RectInt room)
     {
         int splitPoint;
-        if (room.height <= 20)
+        if (room.height <= 15)
         {
             splitPoint = room.y + room.height / 2 + Random.Range(randomSplitOffset.x / 2, randomSplitOffset.y / 2);
         }
@@ -110,7 +115,7 @@ public class DungeonGenerator : MonoBehaviour
     public void SplitVertically(RectInt room)
     {
         int splitPoint;
-        if (room.width <= 20)
+        if (room.width <= 15)
         {
             splitPoint = room.x + room.width / 2 + Random.Range(randomSplitOffset.x / 2, randomSplitOffset.y / 2);
         }
@@ -118,7 +123,7 @@ public class DungeonGenerator : MonoBehaviour
         {
             splitPoint = room.x + room.width / 2 + Random.Range(randomSplitOffset.x, randomSplitOffset.y);
         }
-        
+
         RectInt leftRoom = new RectInt(room.x, room.y, splitPoint - room.x + 1, room.height);
         RectInt rightRoom = new RectInt(splitPoint, room.y, room.width - (splitPoint - room.x), room.height);
         rooms.RemoveAt(0);
@@ -136,5 +141,40 @@ public class DungeonGenerator : MonoBehaviour
         }
         completedRooms.Add(room);
         rooms.Remove(room);
+    }
+
+    private void GenerationTypeChanged()
+    {
+        if (generationType == "Small delay")
+        {
+            // Checks if Coroutine is null
+            splitDelayCoroutine ??= StartCoroutine(SplitRoomsWithDelay());
+        }
+        else if (generationType == "Instant")
+        {
+            splitInstantCoroutine ??= StartCoroutine(SplitRoomsInstantly());
+        }
+        else
+        {
+            StopAllCoroutines();
+        }
+    }
+
+    private IEnumerator SplitRoomsWithDelay()
+    {
+        while (rooms.Count > 0)
+        {
+            SplitRooms();
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
+    private IEnumerator SplitRoomsInstantly()
+    {
+        while (rooms.Count > 0)
+        {
+            SplitRooms();
+            yield return null; // Wait for the next frame
+        }
     }
 }
