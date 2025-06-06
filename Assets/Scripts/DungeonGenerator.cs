@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using System.Collections;
 using System.Collections.Generic;
 using NaughtyAttributes;
@@ -8,7 +9,7 @@ public class DungeonGenerator : MonoBehaviour
     [Header("Dungeon Settings")]
     public Vector2Int startingRoomSize = new Vector2Int(100, 100);
     public Vector2Int minRoomSize = new Vector2Int(10, 10);
-    public Vector2Int randomSplitOffset = new Vector2Int(-3, 3);
+    public Vector2Int randomSplitOffset = new Vector2Int(-4, 4);
 
     [Header("Dungeon Generation")]
     [OnValueChanged("GenerationTypeChanged")]
@@ -34,6 +35,7 @@ public class DungeonGenerator : MonoBehaviour
     private RectInt room;
     private Coroutine splitDelayCoroutine;
     private Coroutine splitInstantCoroutine;
+    private Tilemap tilemap;
     private WaitForSeconds oneSecondPause;
     private WaitForSeconds halfASecondPause;
 
@@ -42,6 +44,8 @@ public class DungeonGenerator : MonoBehaviour
     {
         oneSecondPause = new WaitForSeconds(1);
         halfASecondPause = new WaitForSeconds(0.5f);
+
+        tilemap = GameObject.Find("Tilemap").GetComponent<Tilemap>();
 
         CreateMainRoom();
 
@@ -71,6 +75,11 @@ public class DungeonGenerator : MonoBehaviour
         {
             SplitRooms();
         }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            Debug.Log($"tilemap: {tilemap}");
+        }
     }
 
     void CreateMainRoom()
@@ -96,7 +105,7 @@ public class DungeonGenerator : MonoBehaviour
     public void SplitHorizontally(RectInt room)
     {
         int splitPoint;
-        if (room.height <= 15)
+        if (room.height <= randomSplitOffset.y * 8)
         {
             splitPoint = room.y + room.height / 2 + Random.Range(randomSplitOffset.x / 2, randomSplitOffset.y / 2);
         }
@@ -115,7 +124,7 @@ public class DungeonGenerator : MonoBehaviour
     public void SplitVertically(RectInt room)
     {
         int splitPoint;
-        if (room.width <= 15)
+        if (room.height <= randomSplitOffset.y * 8)
         {
             splitPoint = room.x + room.width / 2 + Random.Range(randomSplitOffset.x / 2, randomSplitOffset.y / 2);
         }
@@ -165,7 +174,7 @@ public class DungeonGenerator : MonoBehaviour
         while (rooms.Count > 0)
         {
             SplitRooms();
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.3f);
         }
     }
 
@@ -177,4 +186,6 @@ public class DungeonGenerator : MonoBehaviour
             yield return null; // Wait for the next frame
         }
     }
+
+    // function to 
 }
