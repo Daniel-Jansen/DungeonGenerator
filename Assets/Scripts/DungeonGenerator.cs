@@ -33,6 +33,8 @@ public class DungeonGenerator : MonoBehaviour
     public List<RectInt> completedRooms = new List<RectInt>();
     public List<RectInt> doors = new List<RectInt>();
 
+    private HashSet<RectInt> visited = new HashSet<RectInt>();
+
     private RectInt room;
     private Coroutine splitDelayCoroutine;
     private Coroutine splitInstantCoroutine;
@@ -76,6 +78,11 @@ public class DungeonGenerator : MonoBehaviour
         foreach (var d in doors)
         {
             AlgorithmsUtils.DebugRectInt(d, Color.blue);
+        }
+
+        foreach (var v in visited)
+        {
+            AlgorithmsUtils.DebugRectInt(v, Color.yellow);
         }
 
         if (Input.GetKeyDown(KeyCode.Space) && generationType == "Spacebar press")
@@ -161,7 +168,6 @@ public class DungeonGenerator : MonoBehaviour
     private IEnumerator FindConnectedRooms(RectInt startRoom)
     {
         Queue<RectInt> toProcess = new Queue<RectInt>();
-        HashSet<RectInt> visited = new HashSet<RectInt>();
 
         toProcess.Enqueue(startRoom);
         visited.Add(startRoom);
@@ -170,7 +176,7 @@ public class DungeonGenerator : MonoBehaviour
         while (toProcess.Count > 0)
         {
             RectInt current = toProcess.Dequeue();
-            int attemptsLeft = 10;
+            int attemptsLeft = 8;
 
             while (attemptsLeft > 0)
             {
@@ -182,7 +188,6 @@ public class DungeonGenerator : MonoBehaviour
 
                     if (AlgorithmsUtils.Intersects(current, other) == true)
                     {
-                        completedRooms.Add(other);
                         visited.Add(other);
                         toProcess.Enqueue(other);
                         foundConnection = true;
@@ -195,7 +200,7 @@ public class DungeonGenerator : MonoBehaviour
 
                 if (foundConnection)
                 {
-                    attemptsLeft = 10;
+                    attemptsLeft = 8;
                 }
                 else
                 {
@@ -211,16 +216,30 @@ public class DungeonGenerator : MonoBehaviour
     {
         Tile tile = ScriptableObject.CreateInstance<Tile>();
 
-        // Find the center of each room
-        Vector3Int centerA = new Vector3Int(roomA.x + roomA.width / 2, roomA.y + roomA.height / 2, 0);
-        Vector3Int centerB = new Vector3Int(roomB.x + roomB.width / 2, roomB.y + roomB.height / 2, 0);
+        // // Find the center of each room
+        // Vector3Int centerA = new Vector3Int(roomA.x + roomA.width / 2, roomA.y + roomA.height / 2, 0);
+        // Vector3Int centerB = new Vector3Int(roomB.x + roomB.width / 2, roomB.y + roomB.height / 2, 0);
 
-        Debug.Log($"Creating centers {centerA} and {centerB}");
-        // Create a door at the center point between the two rooms
-        Vector3Int doorPosition = Vector3Int.RoundToInt((centerA + centerB) / 2);
+        // Debug.Log($"Creating centers {centerA} and {centerB}");
+        // // Create a door at the center point between the two rooms
+
+        // Get the intersection area between the two rooms
+        RectInt intersection = AlgorithmsUtils.Intersect(roomA, roomB);
+
+        if (intersection.width <= 3 && intersection.height <= 3)
+        {
+            return; // If the intersection is too small, do not create a door
+        }
+
+        // Calculate the center of the intersection to use as the door position
+        Vector3Int doorPosition = new Vector3Int(
+            intersection.x + intersection.width / 2,
+            intersection.y + intersection.height / 2,
+            0
+        );
+
         tilemap.SetTile(doorPosition, tile);
         doors.Add(new RectInt(doorPosition.x, doorPosition.y, 1, 1));
-        Debug.Log($"Door created between {roomA} and {roomB} at position {doorPosition}");
     }
 
     private void GenerationTypeChanged()
