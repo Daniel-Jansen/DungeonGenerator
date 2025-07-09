@@ -23,15 +23,15 @@ public class DungeonGenerator : MonoBehaviour
             "Spacebar press",
             "Small delay",
             "Instant",
-            "Test",
         };
     }
-
 
     [Header("Room Lists")]
     public List<RectInt> rooms = new List<RectInt>();
     public List<RectInt> completedRooms = new List<RectInt>();
     public List<RectInt> doors = new List<RectInt>();
+
+    private Graph<RectInt> graph = new Graph<RectInt>();
 
     private HashSet<RectInt> visited = new HashSet<RectInt>();
 
@@ -43,7 +43,6 @@ public class DungeonGenerator : MonoBehaviour
     private WaitForSeconds halfASecondPause;
     private bool roomGenerationComplete = false;
     private bool doorGenerationComplete = false;
-
 
     void Start()
     {
@@ -86,6 +85,18 @@ public class DungeonGenerator : MonoBehaviour
             AlgorithmsUtils.DebugRectInt(v, Color.yellow);
         }
 
+        foreach (var n in graph.adjacencyList.Keys)
+        {
+            Vector3 center = new Vector3(n.x + n.width / 2f, 0, n.y + n.height / 2f);
+            DebugExtension.DebugWireSphere(center, Color.cyan, 0.5f);
+            // Draw edges
+            foreach (var neighbor in graph.GetNeighbors(n))
+            {
+                Vector3 neighborCenter = new Vector3(neighbor.x + neighbor.width / 2f, 0, neighbor.y + neighbor.height / 2f);
+                Debug.DrawLine(center, neighborCenter, Color.magenta);
+            }
+        }
+
         if (Input.GetKeyDown(KeyCode.Space) && generationType == "Spacebar press")
         {
             SplitRooms();
@@ -99,7 +110,7 @@ public class DungeonGenerator : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.R))
         {
-            StartCoroutine(FindConnectedRooms(rooms[0]));
+            graph.PrintGraph();
         }
     }
 
@@ -120,6 +131,11 @@ public class DungeonGenerator : MonoBehaviour
         {
             // Split the room horizontally if it is taller than it is wide
             SplitHorizontally(rooms[0]);
+        }
+
+        if (rooms.Count == 0 && !roomGenerationComplete)
+        {
+            roomGenerationComplete = true;
         }
     }
 
@@ -164,7 +180,6 @@ public class DungeonGenerator : MonoBehaviour
         rooms.AddRange(completedRooms);
         completedRooms.Clear();
     }
-
 
     private IEnumerator FindConnectedRooms(RectInt startRoom)
     {
@@ -249,6 +264,44 @@ public class DungeonGenerator : MonoBehaviour
         doors.Add(new RectInt(doorPosition.x, doorPosition.y, 1, 1));
     }
 
+    private IEnumerator GenerateGraph()
+    {
+        yield return GenerateNodes();
+
+        foreach (var room in rooms)
+        {
+            yield return FindDoorsInRoom(room);
+        }
+    }
+
+    private IEnumerator GenerateNodes()
+    {
+        foreach (var room in rooms) 
+        {
+            graph.AddNode(room);
+        }
+
+        foreach (var door in doors)
+        {
+            graph.AddNode(door);
+        }
+
+        yield return null;
+    }
+
+    private IEnumerator FindDoorsInRoom(RectInt room)
+    {
+        foreach (var door in doors)
+        {
+            if (AlgorithmsUtils.Intersects(room, door))
+            {
+                graph.AddEdge(room, door);
+            }
+        }
+
+        yield return null;
+    }
+
     private void GenerationTypeChanged()
     {
         if (generationType == "Small delay")
@@ -273,10 +326,14 @@ public class DungeonGenerator : MonoBehaviour
             SplitRooms();
             yield return new WaitForSeconds(0.2f);
         }
-        if (!roomGenerationComplete)
+        if (roomGenerationComplete)
         {
-            roomGenerationComplete = true;
             SetListToDefault();
+            StartCoroutine(FindConnectedRooms(rooms[0]));
+        }
+        if (doorGenerationComplete)
+        {
+            StartCoroutine(GenerateGraph());
         }
     }
 
@@ -287,10 +344,14 @@ public class DungeonGenerator : MonoBehaviour
             SplitRooms();
             yield return null;
         }
-        if (!roomGenerationComplete)
+        if (roomGenerationComplete)
         {
-            roomGenerationComplete = true;
             SetListToDefault();
-        } 
+            StartCoroutine(FindConnectedRooms(rooms[0]));
+        }
+        if (doorGenerationComplete)
+        {
+            StartCoroutine(GenerateGraph());
+        }
     }
 }
