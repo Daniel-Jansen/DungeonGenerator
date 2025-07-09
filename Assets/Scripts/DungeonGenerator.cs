@@ -42,6 +42,7 @@ public class DungeonGenerator : MonoBehaviour
     private WaitForSeconds oneSecondPause;
     private WaitForSeconds halfASecondPause;
     private bool roomGenerationComplete = false;
+    private bool doorGenerationComplete = false;
 
 
     void Start()
@@ -169,14 +170,22 @@ public class DungeonGenerator : MonoBehaviour
     {
         Queue<RectInt> toProcess = new Queue<RectInt>();
 
-        toProcess.Enqueue(startRoom);
-        visited.Add(startRoom);
-        completedRooms.Add(startRoom);
+        // Enqueue all rooms to process
+        foreach (var room in rooms) 
+        {
+            toProcess.Enqueue(room);
+        }
 
         while (toProcess.Count > 0)
         {
             RectInt current = toProcess.Dequeue();
             int attemptsLeft = 8;
+
+            completedRooms.Add(current);
+            rooms.Remove(current);
+
+            visited.Clear();
+            visited.Add(current);
 
             while (attemptsLeft > 0)
             {
@@ -189,11 +198,10 @@ public class DungeonGenerator : MonoBehaviour
                     if (AlgorithmsUtils.Intersects(current, other) == true)
                     {
                         visited.Add(other);
-                        toProcess.Enqueue(other);
                         foundConnection = true;
                         // Create a door between the two rooms
                         CreateDoorBetweenRooms(current, other);
-                        yield return new WaitForSeconds(2); // Pause to visualize the door creation
+                        // yield return new WaitForSeconds(0.5f); // Pause to visualize the door creation
                         break; // restart attempts
                     }
                 }
@@ -209,6 +217,12 @@ public class DungeonGenerator : MonoBehaviour
             }
         }
 
+        if (!doorGenerationComplete)
+        {
+            doorGenerationComplete = true;
+            visited.Clear();
+            SetListToDefault();
+        }
         yield break;
     }
 
@@ -216,17 +230,10 @@ public class DungeonGenerator : MonoBehaviour
     {
         Tile tile = ScriptableObject.CreateInstance<Tile>();
 
-        // // Find the center of each room
-        // Vector3Int centerA = new Vector3Int(roomA.x + roomA.width / 2, roomA.y + roomA.height / 2, 0);
-        // Vector3Int centerB = new Vector3Int(roomB.x + roomB.width / 2, roomB.y + roomB.height / 2, 0);
-
-        // Debug.Log($"Creating centers {centerA} and {centerB}");
-        // // Create a door at the center point between the two rooms
-
         // Get the intersection area between the two rooms
         RectInt intersection = AlgorithmsUtils.Intersect(roomA, roomB);
 
-        if (intersection.width <= 3 && intersection.height <= 3)
+        if (intersection.width <= 2 && intersection.height <= 2)
         {
             return; // If the intersection is too small, do not create a door
         }
@@ -284,6 +291,6 @@ public class DungeonGenerator : MonoBehaviour
         {
             roomGenerationComplete = true;
             SetListToDefault();
-        }
+        } 
     }
 }
