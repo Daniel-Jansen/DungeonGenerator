@@ -302,6 +302,13 @@ public class DungeonGenerator : MonoBehaviour
         yield return null;
     }
 
+    [Button]
+    private void BFSSearch()
+    {
+        visited.Clear();
+        StartCoroutine(graph.BFS(rooms[0], visited));
+    }
+
     private void GenerationTypeChanged()
     {
         if (generationType == "Small delay")
