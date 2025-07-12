@@ -216,7 +216,7 @@ public class DungeonGenerator : MonoBehaviour
                         foundConnection = true;
                         // Create a door between the two rooms
                         CreateDoorBetweenRooms(current, other);
-                        // yield return new WaitForSeconds(0.5f); // Pause to visualize the door creation
+                        yield return null;
                         break; // restart attempts
                     }
                 }
@@ -260,6 +260,16 @@ public class DungeonGenerator : MonoBehaviour
             0
         );
 
+        // Randomize the door location within the intersection area
+        if (intersection.width > 2)
+        {
+            doorPosition.x = Random.Range(intersection.x + 1, intersection.x + intersection.width - 1);
+        }
+        if (intersection.height > 2)
+        {
+            doorPosition.y = Random.Range(intersection.y + 1, intersection.y + intersection.height - 1);
+        }
+
         tilemap.SetTile(doorPosition, tile);
         doors.Add(new RectInt(doorPosition.x, doorPosition.y, 1, 1));
     }
@@ -278,14 +288,16 @@ public class DungeonGenerator : MonoBehaviour
 
     private IEnumerator GenerateNodes()
     {
-        foreach (var room in rooms) 
+        foreach (var room in rooms)
         {
             graph.AddNode(room);
+            yield return null;
         }
 
         foreach (var door in doors)
         {
             graph.AddNode(door);
+            yield return null;
         }
 
         yield return null;
@@ -350,15 +362,14 @@ public class DungeonGenerator : MonoBehaviour
             SplitRooms();
             yield return new WaitForSeconds(0.2f);
         }
-        if (roomGenerationComplete)
-        {
-            SetListToDefault();
-            StartCoroutine(FindConnectedRooms());
-        }
-        if (doorGenerationComplete)
-        {
-            StartCoroutine(GenerateGraph());
-        }
+
+        SetListToDefault();
+        yield return StartCoroutine(FindConnectedRooms());
+
+        yield return StartCoroutine(GenerateGraph());
+
+        tileMapGenerator.GenerateTileMap();
+        yield return StartCoroutine(marchingSquaresSpawner.GenerateWalls());
     }
 
     private IEnumerator SplitRoomsInstantly()

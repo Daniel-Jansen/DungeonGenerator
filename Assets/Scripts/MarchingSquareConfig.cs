@@ -6,5 +6,3 @@ public class MarchingSquareConfig
     public GameObject prefab;
     public float rotationDegrees;
 }
-
-

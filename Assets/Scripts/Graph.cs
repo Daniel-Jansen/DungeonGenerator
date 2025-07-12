@@ -69,5 +69,6 @@ public class Graph<T>
 
         Debug.Log($"Total nodes: {adjacencyList.Count}");
         Debug.Log($"Visited nodes amount: {visited.Count}");
+        visited.Clear();
     }
 }

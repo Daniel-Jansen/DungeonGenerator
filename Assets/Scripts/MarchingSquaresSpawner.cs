@@ -36,7 +36,6 @@ public class MarchingSquaresSpawner : MonoBehaviour
 
     IEnumerator SpawnGeometry(int squareIndex, int tileX, int tileY)
     {
-        Debug.Log($"Spawning geometry for square index: {squareIndex}");
         if (squareIndex == 0 || squareIndex == 15)
             yield return null;
 

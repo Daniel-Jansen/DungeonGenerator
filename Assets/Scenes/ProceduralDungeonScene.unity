@@ -495,8 +495,8 @@ MonoBehaviour:
     rotationDegrees: 90
   - prefab: {fileID: 5030216813126683104, guid: e33a7699cbf2ac441b511ab59f6078d8, type: 3}
     rotationDegrees: 90
-  - prefab: {fileID: 0}
-    rotationDegrees: 0
+  - prefab: {fileID: 4102568016840167935, guid: 2845a60bcd2f5514e93bad2c324f8d31, type: 3}
+    rotationDegrees: 180
   - prefab: {fileID: 6836559720073715965, guid: c6f83813070bea041a9a0e107ab51f59, type: 3}
     rotationDegrees: 0
   - prefab: {fileID: 2891759284571720867, guid: ef501ae38d35df8469fa26679054f194, type: 3}
@@ -505,7 +505,7 @@ MonoBehaviour:
     rotationDegrees: 90
   - prefab: {fileID: 4826982777467161412, guid: bab40014c6bafe441b1a47834f863221, type: 3}
     rotationDegrees: 0
-  - prefab: {fileID: 0}
+  - prefab: {fileID: 4102568016840167935, guid: 2845a60bcd2f5514e93bad2c324f8d31, type: 3}
     rotationDegrees: 0
   - prefab: {fileID: 1040310750116940119, guid: 988bdb5b8c8e5684f82e8aa72c31960a, type: 3}
     rotationDegrees: 90
