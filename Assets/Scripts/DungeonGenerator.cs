@@ -6,9 +6,12 @@ using NaughtyAttributes;
 
 public class DungeonGenerator : MonoBehaviour
 {
+    private TileMapGenerator tileMapGenerator;
+    private MarchingSquaresSpawner marchingSquaresSpawner;
+
     [Header("Dungeon Settings")]
-    public Vector2Int startingRoomSize = new Vector2Int(100, 100);
-    public Vector2Int minRoomSize = new Vector2Int(10, 10);
+    public RectInt startingRoomSize = new RectInt(0, 0, 100, 100);
+    public RectInt minRoomSize = new RectInt(0, 0, 10, 10);
     public int randomSplitOffset = 3;
 
     [Header("Dungeon Generation")]
@@ -26,7 +29,7 @@ public class DungeonGenerator : MonoBehaviour
         };
     }
 
-    [Header("Room Lists")]
+    [Header("Lists")]
     public List<RectInt> rooms = new List<RectInt>();
     public List<RectInt> completedRooms = new List<RectInt>();
     public List<RectInt> doors = new List<RectInt>();
@@ -39,17 +42,14 @@ public class DungeonGenerator : MonoBehaviour
     private Coroutine splitDelayCoroutine;
     private Coroutine splitInstantCoroutine;
     private Tilemap tilemap;
-    private WaitForSeconds oneSecondPause;
-    private WaitForSeconds halfASecondPause;
     private bool roomGenerationComplete = false;
     private bool doorGenerationComplete = false;
 
     void Start()
     {
-        oneSecondPause = new WaitForSeconds(1);
-        halfASecondPause = new WaitForSeconds(0.5f);
-
         tilemap = GameObject.Find("Tilemap").GetComponent<Tilemap>();
+        tileMapGenerator = GetComponent<TileMapGenerator>();
+        marchingSquaresSpawner = GetComponent<MarchingSquaresSpawner>();
 
         CreateMainRoom();
 
@@ -110,7 +110,7 @@ public class DungeonGenerator : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.R))
         {
-            graph.PrintGraph();
+            marchingSquaresSpawner.GenerateWalls();
         }
     }
 
@@ -181,7 +181,7 @@ public class DungeonGenerator : MonoBehaviour
         completedRooms.Clear();
     }
 
-    private IEnumerator FindConnectedRooms(RectInt startRoom)
+    private IEnumerator FindConnectedRooms()
     {
         Queue<RectInt> toProcess = new Queue<RectInt>();
 
@@ -272,6 +272,8 @@ public class DungeonGenerator : MonoBehaviour
         {
             yield return FindDoorsInRoom(room);
         }
+
+        StartCoroutine(BFSSearch());
     }
 
     private IEnumerator GenerateNodes()
@@ -302,11 +304,26 @@ public class DungeonGenerator : MonoBehaviour
         yield return null;
     }
 
-    [Button]
-    private void BFSSearch()
+    private IEnumerator BFSSearch()
     {
         visited.Clear();
-        StartCoroutine(graph.BFS(rooms[0], visited));
+
+        yield return StartCoroutine(graph.BFS(rooms[0], visited));
+    }
+
+    public RectInt GetDungeonBounds()
+    {
+        return startingRoomSize;
+    }
+    
+    public List<RectInt> GetRooms()
+    {
+        return rooms;
+    }
+
+    public List<RectInt> GetDoors()
+    {
+        return doors;
     }
 
     private void GenerationTypeChanged()
@@ -336,7 +353,7 @@ public class DungeonGenerator : MonoBehaviour
         if (roomGenerationComplete)
         {
             SetListToDefault();
-            StartCoroutine(FindConnectedRooms(rooms[0]));
+            StartCoroutine(FindConnectedRooms());
         }
         if (doorGenerationComplete)
         {
@@ -351,14 +368,13 @@ public class DungeonGenerator : MonoBehaviour
             SplitRooms();
             yield return null;
         }
-        if (roomGenerationComplete)
-        {
-            SetListToDefault();
-            StartCoroutine(FindConnectedRooms(rooms[0]));
-        }
-        if (doorGenerationComplete)
-        {
-            StartCoroutine(GenerateGraph());
-        }
+
+        SetListToDefault();
+        yield return StartCoroutine(FindConnectedRooms());
+
+        yield return StartCoroutine(GenerateGraph());
+
+        tileMapGenerator.GenerateTileMap();
+        yield return StartCoroutine(marchingSquaresSpawner.GenerateWalls());
     }
 }

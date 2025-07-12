@@ -51,6 +51,7 @@ public class Graph<T>
         Queue<T> queue = new Queue<T>();
         queue.Enqueue(startNode);
         visited.Add(startNode);
+
         while (queue.Count > 0)
         {
             T currentNode = queue.Dequeue();
