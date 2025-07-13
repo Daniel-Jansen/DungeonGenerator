@@ -11,15 +11,16 @@ public class MarchingSquaresSpawner : MonoBehaviour
     private void Start()
     {
         tileMapGenerator = GetComponent<TileMapGenerator>();
-        wallParent = new GameObject("RoomWalls").transform;
-        wallParent.SetParent(this.transform);
     }
 
-    public IEnumerator GenerateWalls()
+    public void GenerateWalls()
     {
         int[,] map = tileMapGenerator.GetTileMap();
         int rows = map.GetLength(0);
         int cols = map.GetLength(1);
+
+        wallParent = new GameObject("RoomWalls").transform;
+        wallParent.SetParent(this.transform);
 
         for (int y = 0; y < rows - 1; y++)
         {
@@ -33,7 +34,7 @@ public class MarchingSquaresSpawner : MonoBehaviour
                 int squareIndex = (a << 3) | (b << 2) | (c << 1) | d;
 
                 StartCoroutine(SpawnGeometry(squareIndex, x, y));
-                yield return null;
+                // yield return null;
             }
         }
     }

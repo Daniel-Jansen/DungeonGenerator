@@ -1,3 +1,4 @@
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections;
@@ -9,6 +10,9 @@ public class DungeonGenerator : MonoBehaviour
     private TileMapGenerator tileMapGenerator;
     private MarchingSquaresSpawner marchingSquaresSpawner;
     private FloodfillSpawner floodfillSpawner;
+
+    [SerializeField]
+    private NavMeshSurface navMeshSurface;
 
     [Header("Dungeon Settings")]
     public RectInt startingRoomSize = new RectInt(0, 0, 100, 100);
@@ -45,6 +49,7 @@ public class DungeonGenerator : MonoBehaviour
     private Tilemap tilemap;
     private bool roomGenerationComplete = false;
     private bool doorGenerationComplete = false;
+    public bool sufficient = false;
 
     void Start()
     {
@@ -345,6 +350,92 @@ public class DungeonGenerator : MonoBehaviour
         yield return StartCoroutine(floodfillSpawner.FloodFillRoom(roomRect));
     }
 
+    public void SpawnSimpleAssets()
+    {
+        GameObject wallPrefab = Resources.Load<GameObject>("Prefabs/Wall");
+        GameObject wallParent = new GameObject("RoomWalls");
+        wallParent.transform.SetParent(this.transform);
+        NavMeshModifier wallNavMeshModifier = wallParent.AddComponent<NavMeshModifier>();
+        wallNavMeshModifier.overrideArea = true;
+        wallNavMeshModifier.area = 1; // Not walkable area
+
+        GameObject floorPrefab = Resources.Load<GameObject>("Prefabs/Floor");
+        GameObject floorParent = new GameObject("RoomFloors");
+        floorParent.transform.SetParent(this.transform);
+
+        HashSet<Vector2Int> visitedWallPositions = new HashSet<Vector2Int>();
+        visitedWallPositions.Clear();
+
+        // Register door positions first
+        foreach (var door in doors)
+        {
+            for (int x = door.xMin; x < door.xMax; x++)
+            {
+                for (int y = door.yMin; y < door.yMax; y++)
+                {
+                    // No wall at the door position
+                    visitedWallPositions.Add(new Vector2Int(x, y));
+
+                    // Instantiates a floor prefab at the door position
+                    Vector3 worldPos = new Vector3(x + 0.5f, 0, y + 0.5f);
+                    GameObject floor = Instantiate(floorPrefab, worldPos, floorPrefab.transform.rotation, floorParent.transform);
+                    floor.name = $"Floor_Door_{x}_{y}";
+                }
+            }
+        }
+
+        // Place walls & floors for each room
+        foreach (var room in rooms)
+        {
+            // Place walls around the room
+            for (int x = room.x; x < room.x + room.width; x++)
+            {
+                for (int y = room.y; y < room.y + room.height; y++)
+                {
+                    if (x == room.x || x == room.x + room.width - 1 ||
+                        y == room.y || y == room.y + room.height - 1)
+                    {
+                        Vector2Int cellPos = new Vector2Int(x, y);
+
+                        if (!visitedWallPositions.Contains(cellPos))
+                        {
+                            visitedWallPositions.Add(cellPos);
+
+                            Vector3 worldPos = new Vector3(x + 0.5f, 0.5f, y + 0.5f);
+                            GameObject wall = Instantiate(wallPrefab, worldPos, Quaternion.identity, wallParent.transform);
+                            wall.name = $"Wall_{x}_{y}";
+                        }
+                    }
+                }
+            }
+
+            // Place floors inside the room
+            for (int x = room.x + 1; x < room.x + room.width - 1; x++)
+            {
+                for (int y = room.y + 1; y < room.y + room.height - 1; y++)
+                {
+                    Vector3 worldPos = new Vector3(x + 0.5f, 0, y + 0.5f);
+                    GameObject floor = Instantiate(floorPrefab, worldPos, floorPrefab.transform.rotation, floorParent.transform);
+                    floor.name = $"Floor_{x}_{y}";
+                }
+            }
+        }
+
+        BakeNavMesh();
+    }
+
+    public void BakeNavMesh()
+    {
+        if (navMeshSurface != null)
+        {
+            navMeshSurface.BuildNavMesh();
+        }
+        else
+        {
+            Debug.LogError("NavMeshSurface is not assigned.");
+        }
+    }
+
     private void GenerationTypeChanged()
     {
         if (generationType == "Small delay")
@@ -376,7 +467,7 @@ public class DungeonGenerator : MonoBehaviour
         yield return StartCoroutine(GenerateGraph());
 
         tileMapGenerator.GenerateTileMap();
-        yield return StartCoroutine(marchingSquaresSpawner.GenerateWalls());
+        // yield return StartCoroutine(marchingSquaresSpawner.GenerateWalls());
     }
 
     private IEnumerator SplitRoomsInstantly()
@@ -393,8 +484,18 @@ public class DungeonGenerator : MonoBehaviour
         yield return StartCoroutine(GenerateGraph());
 
         tileMapGenerator.GenerateTileMap();
-        yield return StartCoroutine(marchingSquaresSpawner.GenerateWalls());
 
-        yield return StartCoroutine(FloodFillRoom(rooms[0]));
+        if (!sufficient)
+        {
+            marchingSquaresSpawner.GenerateWalls();
+            yield return StartCoroutine(FloodFillRoom(rooms[0]));
+            BakeNavMesh();
+            Debug.Log("Dungeon generation complete.");
+        }
+
+        if (sufficient)
+        {
+            SpawnSimpleAssets();
+        }
     }
 }
