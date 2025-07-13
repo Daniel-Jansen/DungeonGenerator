@@ -28,8 +28,8 @@ public class DungeonGenerator : MonoBehaviour
     {
         return new List<string>
         {
-            "Spacebar press",
-            "Small delay",
+            // "Spacebar press",
+            // "Small delay",
             "Instant",
         };
     }
@@ -60,11 +60,11 @@ public class DungeonGenerator : MonoBehaviour
 
         CreateMainRoom();
 
-        if (generationType == "Small delay")
-        {
-            StartCoroutine(SplitRoomsWithDelay());
-        }
-        else if (generationType == "Instant")
+        // if (generationType == "Small delay")
+        // {
+        //     StartCoroutine(SplitRoomsWithDelay());
+        // }
+        if (generationType == "Instant")
         {
             StartCoroutine(SplitRoomsInstantly());
         }
@@ -436,39 +436,39 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
 
-    private void GenerationTypeChanged()
-    {
-        if (generationType == "Small delay")
-        {
-            // Checks if Coroutine is null
-            splitDelayCoroutine ??= StartCoroutine(SplitRoomsWithDelay());
-        }
-        else if (generationType == "Instant")
-        {
-            splitInstantCoroutine ??= StartCoroutine(SplitRoomsInstantly());
-        }
-        else
-        {
-            StopAllCoroutines();
-        }
-    }
+    // private void GenerationTypeChanged()
+    // {
+    //     // if (generationType == "Small delay")
+    //     // {
+    //     //     // Checks if Coroutine is null
+    //     //     splitDelayCoroutine ??= StartCoroutine(SplitRoomsWithDelay());
+    //     // }
+    //     if (generationType == "Instant")
+    //     {
+    //         splitInstantCoroutine ??= StartCoroutine(SplitRoomsInstantly());
+    //     }
+    //     else
+    //     {
+    //         StopAllCoroutines();
+    //     }
+    // }
 
-    private IEnumerator SplitRoomsWithDelay()
-    {
-        while (rooms.Count > 0)
-        {
-            SplitRooms();
-            yield return new WaitForSeconds(0.2f);
-        }
+    // private IEnumerator SplitRoomsWithDelay()
+    // {
+    //     while (rooms.Count > 0)
+    //     {
+    //         SplitRooms();
+    //         yield return new WaitForSeconds(0.2f);
+    //     }
 
-        SetListToDefault();
-        yield return StartCoroutine(FindConnectedRooms());
+    //     SetListToDefault();
+    //     yield return StartCoroutine(FindConnectedRooms());
 
-        yield return StartCoroutine(GenerateGraph());
+    //     yield return StartCoroutine(GenerateGraph());
 
-        tileMapGenerator.GenerateTileMap();
-        // yield return StartCoroutine(marchingSquaresSpawner.GenerateWalls());
-    }
+    //     tileMapGenerator.GenerateTileMap();
+    //     // yield return StartCoroutine(marchingSquaresSpawner.GenerateWalls());
+    // }
 
     private IEnumerator SplitRoomsInstantly()
     {
