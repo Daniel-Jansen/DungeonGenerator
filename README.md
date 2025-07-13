@@ -1,2 +1,0 @@
-# Gacha-Hell
-project frontiers
