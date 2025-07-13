@@ -6,9 +6,13 @@ public class MarchingSquaresSpawner : MonoBehaviour
     [SerializeField] private TileMapGenerator tileMapGenerator;
     [SerializeField] private MarchingSquareConfig[] lookupTable = new MarchingSquareConfig[16];
 
+    private Transform wallParent;
+
     private void Start()
     {
         tileMapGenerator = GetComponent<TileMapGenerator>();
+        wallParent = new GameObject("RoomWalls").transform;
+        wallParent.SetParent(this.transform);
     }
 
     public IEnumerator GenerateWalls()
@@ -45,7 +49,7 @@ public class MarchingSquaresSpawner : MonoBehaviour
             Vector3 position = new Vector3(tileX + 1f, 0, tileY + 1f);
             Quaternion rotation = Quaternion.Euler(0, config.rotationDegrees, 0);
 
-            Instantiate(config.prefab, position, rotation, transform);
+            Instantiate(config.prefab, position, rotation, wallParent);
         }
     }
 }

@@ -8,6 +8,7 @@ public class DungeonGenerator : MonoBehaviour
 {
     private TileMapGenerator tileMapGenerator;
     private MarchingSquaresSpawner marchingSquaresSpawner;
+    private FloodfillSpawner floodfillSpawner;
 
     [Header("Dungeon Settings")]
     public RectInt startingRoomSize = new RectInt(0, 0, 100, 100);
@@ -50,6 +51,7 @@ public class DungeonGenerator : MonoBehaviour
         tilemap = GameObject.Find("Tilemap").GetComponent<Tilemap>();
         tileMapGenerator = GetComponent<TileMapGenerator>();
         marchingSquaresSpawner = GetComponent<MarchingSquaresSpawner>();
+        floodfillSpawner = GetComponent<FloodfillSpawner>();
 
         CreateMainRoom();
 
@@ -216,7 +218,7 @@ public class DungeonGenerator : MonoBehaviour
                         foundConnection = true;
                         // Create a door between the two rooms
                         CreateDoorBetweenRooms(current, other);
-                        yield return null;
+                        // yield return null;
                         break; // restart attempts
                     }
                 }
@@ -291,13 +293,13 @@ public class DungeonGenerator : MonoBehaviour
         foreach (var room in rooms)
         {
             graph.AddNode(room);
-            yield return null;
+            // yield return null;
         }
 
         foreach (var door in doors)
         {
             graph.AddNode(door);
-            yield return null;
+            // yield return null;
         }
 
         yield return null;
@@ -336,6 +338,11 @@ public class DungeonGenerator : MonoBehaviour
     public List<RectInt> GetDoors()
     {
         return doors;
+    }
+
+    public IEnumerator FloodFillRoom(RectInt roomRect)
+    {
+        yield return StartCoroutine(floodfillSpawner.FloodFillRoom(roomRect));
     }
 
     private void GenerationTypeChanged()
@@ -387,5 +394,7 @@ public class DungeonGenerator : MonoBehaviour
 
         tileMapGenerator.GenerateTileMap();
         yield return StartCoroutine(marchingSquaresSpawner.GenerateWalls());
+
+        yield return StartCoroutine(FloodFillRoom(rooms[0]));
     }
 }
