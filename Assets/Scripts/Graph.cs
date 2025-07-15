@@ -69,6 +69,21 @@ public class Graph<T>
 
         Debug.Log($"Total nodes: {adjacencyList.Count}");
         Debug.Log($"Visited nodes amount: {visited.Count}");
+        CheckRoomAmount(visited.Count);
         visited.Clear();
+    }
+
+    public void CheckRoomAmount(int visitedNodes)
+    {
+        int roomsVisited = visitedNodes - DungeonGenerator.doors.Count;
+
+        if (DungeonGenerator.rooms.Count == roomsVisited)
+        {
+            Debug.Log("All rooms visited!");
+        }
+        else
+        {
+            Debug.Log($"Not all rooms visited. Expected: {roomsVisited}, Actual: {adjacencyList.Count}");
+        }
     }
 }

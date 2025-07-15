@@ -454,9 +454,7 @@ MonoBehaviour:
     height: 10
   randomSplitOffset: 3
   generationType: Instant
-  rooms: []
   completedRooms: []
-  doors: []
   sufficient: 0
 --- !u!114 &567399305
 MonoBehaviour:

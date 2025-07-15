@@ -35,9 +35,9 @@ public class DungeonGenerator : MonoBehaviour
     }
 
     [Header("Lists")]
-    public List<RectInt> rooms = new List<RectInt>();
+    public static List<RectInt> rooms = new List<RectInt>();
     public List<RectInt> completedRooms = new List<RectInt>();
-    public List<RectInt> doors = new List<RectInt>();
+    public static List<RectInt> doors = new List<RectInt>();
 
     private Graph<RectInt> graph = new Graph<RectInt>();
 
